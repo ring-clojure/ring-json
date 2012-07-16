@@ -1,6 +1,13 @@
 # Ring-JSON
 
-Standard Ring middleware functions for handling JSON requests and responses.
+Standard Ring middleware functions for handling JSON requests and
+responses.
+
+## Installation
+
+To install, add the following to your project `:dependencies`:
+
+    [ring/ring-json "0.1.0-SNAPSHOT"]
 
 ## Usage
 
