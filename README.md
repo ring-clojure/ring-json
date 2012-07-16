@@ -4,11 +4,11 @@ Standard Ring middleware functions for handling JSON requests and responses.
 
 ## Usage
 
-You can use middleware to convert any response with a map as a body
-into JSON:
+The `wrap-json-response` middleware will convert any response with a
+map as a body into JSON:
 
 ```clojure
-(use 'ring.middleware.json-response
+(use 'ring.middleware.json
      'ring.util.response)
 
 (defn handler [request]
@@ -16,6 +16,21 @@ into JSON:
 
 (def app
   (wrap-json-response handler))
+```
+
+The `wrap-json-params` middleware will parse any request with a JSON
+content-type and body and merge the resulting parameters into a params
+map:
+
+```clojure
+(use 'ring.middleware.json)
+
+(defn handler [request]
+  (prn (get-in request [:params "user"]))
+  (response "Uploaded user."))
+
+(def app
+  (wrap-json-params handler))
 ```
 
 ## License
