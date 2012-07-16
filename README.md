@@ -7,7 +7,7 @@ responses.
 
 To install, add the following to your project `:dependencies`:
 
-    [ring/ring-json "0.1.0-SNAPSHOT"]
+    [ring/ring-json "0.1.0"]
 
 ## Usage
 
