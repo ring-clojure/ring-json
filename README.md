@@ -44,4 +44,4 @@ map:
 
 Copyright © 2012 James Reeves
 
-Distributed under the Eclipse Public License, the same as Clojure.
+Distributed under the MIT License, the same as Ring.
