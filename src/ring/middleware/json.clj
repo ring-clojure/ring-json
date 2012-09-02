@@ -21,12 +21,13 @@
       (handler request))))
 
 (defn wrap-json-response
-  "Middleware that converts responses with a map for a body into a JSON
-  response."
+  "Middleware that converts responses with a map or a vector for a body into a
+  JSON response."
   [handler]
   (fn [request]
     (let [response (handler request)]
-      (if (map? (:body response))
+      (if (or (map? (:body response))
+              (vector? (:body response)))
         (-> response
             (content-type "application/json")
             (update-in [:body] json/generate-string))

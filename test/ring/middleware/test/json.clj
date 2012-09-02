@@ -41,4 +41,10 @@
     (let [handler  (constantly {:status 200 :headers {} :body "foobar"})
           response ((wrap-json-response handler) {})]
       (is (= (:headers response) {}))
-      (is (= (:body response) "foobar")))))
+      (is (= (:body response) "foobar"))))
+
+  (testing "vector body"
+    (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
+          response ((wrap-json-response handler) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (:body response) "[\"foo\",\"bar\"]")))))
