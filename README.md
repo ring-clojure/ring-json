@@ -1,5 +1,7 @@
 # Ring-JSON
 
+[![Build Status](https://secure.travis-ci.org/ring-clojure/ring-json.png)](http://travis-ci.org/ring-clojure/ring-json)
+
 Standard Ring middleware functions for handling JSON requests and
 responses.
 
