@@ -21,7 +21,14 @@
       (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {"foo" "bar"} (:body response)))))))
+        (is (= {"foo" "bar"} (:body response))))))
+
+  (let [handler (wrap-json-body identity {:keywords? true})]
+    (testing "keyword keys"
+      (let [request  {:content-type "application/json"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {:foo "bar"} (:body response)))))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]

@@ -6,17 +6,17 @@
   (if-let [type (:content-type request)]
     (not (empty? (re-find #"^application/(vnd.+)?json" type)))))
 
-(defn- read-json [request]
+(defn- read-json [request & [keywords?]]
   (if (json-request? request)
     (if-let [body (:body request)]
-      (json/parse-string (slurp body)))))
+      (json/parse-string (slurp body) keywords?))))
 
 (defn wrap-json-body
   "Middleware that parses the :body of JSON requests into a Clojure data
   structure."
-  [handler]
+  [handler & [{:keys [keywords?]}]]
   (fn [request]
-    (if-let [json (read-json request)]
+    (if-let [json (read-json request keywords?)]
       (handler (assoc request :body json))
       (handler request))))
 
