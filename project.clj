@@ -5,4 +5,4 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.2.1"]
                  [cheshire "4.0.2"]
-                 [ring/ring-core "1.1.4"]])
+                 [ring/ring-core "1.1.5"]])
