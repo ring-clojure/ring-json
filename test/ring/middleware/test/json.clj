@@ -3,6 +3,26 @@
         clojure.test
         ring.util.io))
 
+(deftest test-json-body
+  (let [handler (wrap-json-body identity)]
+    (testing "xml body"
+      (let [request  {:content-type "application/xml"
+                      :body (string-input-stream "<xml></xml>")}
+            response (handler request)]
+        (is (= "<xml></xml>") (slurp (:body response)))))
+    
+    (testing "json body"
+      (let [request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {"foo" "bar"} (:body response)))))
+
+    (testing "custom json body"
+      (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {"foo" "bar"} (:body response)))))))
+
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
     (testing "xml body"

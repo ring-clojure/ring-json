@@ -6,18 +6,30 @@
   (if-let [type (:content-type request)]
     (not (empty? (re-find #"^application/(vnd.+)?json" type)))))
 
+(defn- read-json [request]
+  (if (json-request? request)
+    (if-let [body (:body request)]
+      (json/parse-string (slurp body)))))
+
+(defn wrap-json-body
+  "Middleware that parses the :body of JSON requests into a Clojure data
+  structure."
+  [handler]
+  (fn [request]
+    (if-let [json (read-json request)]
+      (handler (assoc request :body json))
+      (handler request))))
+
 (defn wrap-json-params
   "Middleware that converts request bodies in JSON format to a map of
   parameters, which is added to the request map on the :json-params and
   :params keys."
   [handler]
   (fn [request]
-    (if-let [body (and (json-request? request) (:body request))]
-      (let [params (json/parse-string (slurp body))]
-        (handler
-         (-> request
-             (assoc :json-params params)
-             (update-in [:params] merge params))))
+    (if-let [json (read-json request)]
+      (handler (-> request
+                   (assoc :json-params json)
+                   (update-in [:params] merge json)))
       (handler request))))
 
 (defn wrap-json-response
