@@ -9,7 +9,7 @@ responses.
 
 To install, add the following to your project `:dependencies`:
 
-    [ring/ring-json "0.1.1"]
+    [ring/ring-json "0.1.2"]
 
 ## Usage
 
