@@ -14,7 +14,7 @@ To install, add the following to your project `:dependencies`:
 ## Usage
 
 The `wrap-json-response` middleware will convert any response with a
-map as a body into JSON:
+map or a vector as a body into JSON:
 
 ```clojure
 (use 'ring.middleware.json
@@ -26,6 +26,21 @@ map as a body into JSON:
 (def app
   (wrap-json-response handler))
 ```
+
+The `wrap-json-body` middleware will parse the body of any request
+with a JSON content-type into a Clojure data structure:
+
+```clojure
+(use 'ring.middleware.json)
+
+(defn handler [request]
+  (prn (get-in request [:body "user"]))
+  (response "Uploaded user."))
+
+(def app
+  (wrap-json-body handler))
+```
+
 
 The `wrap-json-params` middleware will parse any request with a JSON
 content-type and body and merge the resulting parameters into a params
