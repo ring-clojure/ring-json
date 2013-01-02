@@ -38,8 +38,7 @@
   [handler]
   (fn [request]
     (let [response (handler request)]
-      (if (or (map? (:body response))
-              (vector? (:body response)))
+      (if (coll? (:body response))
         (-> response
             (content-type "application/json")
             (update-in [:body] json/generate-string))
