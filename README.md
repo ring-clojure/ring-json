@@ -14,7 +14,7 @@ To install, add the following to your project `:dependencies`:
 ## Usage
 
 The `wrap-json-response` middleware will convert any response with a
-map or a vector as a body into JSON:
+collection as a body (e.g. map, vector, set, seq, etc) into JSON:
 
 ```clojure
 (use 'ring.middleware.json
