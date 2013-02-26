@@ -61,7 +61,7 @@
   (testing "map body"
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar"}})
           response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "{\"foo\":\"bar\"}"))))
 
   (testing "string body"
@@ -73,19 +73,19 @@
   (testing "vector body"
     (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
           response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
   
   (testing "list body"
     (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
           response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
   
   (testing "set body"
     (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
           response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json"))
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
 
   (testing "JSON options"
