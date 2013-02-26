@@ -34,12 +34,14 @@
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a
-  JSON response."
-  [handler]
+  JSON response. Accepts the following options:
+    :pretty            - when true, pretty-print the JSON
+    :escape-non-ascii  - when true, non-ASCII characters are escaped with \\u"
+  [handler & [{:as options}]]
   (fn [request]
     (let [response (handler request)]
       (if (coll? (:body response))
         (-> response
             (content-type "application/json")
-            (update-in [:body] json/generate-string))
+            (update-in [:body] json/generate-string options))
         response))))
