@@ -41,7 +41,8 @@
   (fn [request]
     (let [response (handler request)]
       (if (coll? (:body response))
-        (-> response
-            (content-type "application/json; charset=utf-8")
-            (update-in [:body] json/generate-string options))
+        (let [json-response (update-in response [:body] json/generate-string options)]
+          (if (contains? (:headers response) "Content-Type")
+            json-response
+            (content-type json-response "application/json; charset=utf-8")))
         response))))
