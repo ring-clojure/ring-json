@@ -17,14 +17,14 @@ The `wrap-json-response` middleware will convert any response with a
 collection as a body (e.g. map, vector, set, seq, etc) into JSON:
 
 ```clojure
-(use 'ring.middleware.json
-     'ring.util.response)
+(require '[ring.middleware.json :as json]
+         '[ring.util.response :as resp])
 
 (defn handler [request]
-  (response {:foo "bar"}))
+  (resp/response {:foo "bar"}))
 
 (def app
-  (wrap-json-response handler))
+  (json/wrap-json-response handler))
 ```
 
 The `wrap-json-body` middleware will parse the body of any request
@@ -35,10 +35,10 @@ with a JSON content-type into a Clojure data structure:
 
 (defn handler [request]
   (prn (get-in request [:body "user"]))
-  (response "Uploaded user."))
+  (resp/response "Uploaded user."))
 
 (def app
-  (wrap-json-body handler))
+  (json/wrap-json-body handler))
 ```
 
 
@@ -47,14 +47,12 @@ content-type and body and merge the resulting parameters into a params
 map:
 
 ```clojure
-(use 'ring.middleware.json)
-
 (defn handler [request]
   (prn (get-in request [:params "user"]))
-  (response "Uploaded user."))
+  (resp/response "Uploaded user."))
 
 (def app
-  (wrap-json-params handler))
+  (json/wrap-json-params handler))
 ```
 
 ## License
