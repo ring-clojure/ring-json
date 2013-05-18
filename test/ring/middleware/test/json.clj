@@ -92,4 +92,10 @@
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
           response ((wrap-json-response handler {:pretty true}) {})]
       (is (= (:body response)
-             "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")))))
+             "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}"))))
+
+  (testing "don’t overwrite Content-Type if already set"
+    (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/json; some-param=some-value"} :body {:foo "bar"}})
+          response ((wrap-json-response handler) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; some-param=some-value"))
+      (is (= (:body response) "{\"foo\":\"bar\"}")))))
