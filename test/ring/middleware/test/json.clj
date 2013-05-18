@@ -55,7 +55,16 @@
                       :params {"id" 3}}
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
-        (is (= {"foo" "bar"} (:json-params response)))))))
+        (is (= {"foo" "bar"} (:json-params response))))))
+
+  (let [handler (wrap-json-params identity {:keywords? true})]
+    (testing "keyword keys"
+      (let [request  {:content-type "application/json"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= {:foo "bar", "id" 3} (:params response)))
+        (is (= {:foo "bar"} (:json-params response)))))))
 
 (deftest test-json-response
   (testing "map body"
