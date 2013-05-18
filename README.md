@@ -38,7 +38,7 @@ with a JSON content-type into a Clojure data structure:
   (response "Uploaded user."))
 
 (def app
-  (wrap-json-body handler))
+  (wrap-json-body handler {:keywords? true}))
 ```
 
 
