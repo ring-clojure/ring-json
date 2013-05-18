@@ -1,4 +1,4 @@
-(defproject ring/ring-json "0.2.0"
+(defproject ring/ring-json "0.2.1"
   :description "Ring middleware for handling JSON"
   :url "https://github.com/ring-clojure/ring-json"
   :license {:name "The MIT License"
