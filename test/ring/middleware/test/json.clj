@@ -10,7 +10,7 @@
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
         (is (= "<xml></xml>") (slurp (:body response)))))
-    
+
     (testing "json body"
       (let [request  {:content-type "application/json; charset=UTF-8"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
@@ -28,7 +28,17 @@
       (let [request  {:content-type "application/json"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response)))))))
+        (is (= {:foo "bar"} (:body response))))))
+
+  (testing "invalid json body with custom on-error handling"
+      (let [custom-on-error (fn [handler request ex] {:status 400 :body {:error "The JSON provided is either malformed or invalid."}})
+            handler (wrap-json-body identity {:on-error custom-on-error})
+            request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{:foo \"bar}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= 400 (:status response)))
+        (is (= "The JSON provided is either malformed or invalid." (get-in response [:body :error]))))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
@@ -55,7 +65,31 @@
                       :params {"id" 3}}
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
-        (is (= {"foo" "bar"} (:json-params response)))))))
+        (is (= {"foo" "bar"} (:json-params response)))))
+
+    (testing "invalid json body with the default on-error handling"
+      (let [request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{:foo \"bar}")
+                      :params {"id" 3}}]
+        (is (thrown? Exception (handler request)))
+        )))
+
+    (testing "keyword keys"
+      (let [handler (wrap-json-params identity {:keywords? true})
+            request  {:content-type "application/json"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {:foo "bar"} (:params response)))))
+
+    (testing "invalid json body with custom on-error handling"
+      (let [custom-on-error (fn [handler request ex] {:status 400 :body {:error "The JSON provided is either malformed or invalid."}})
+            handler (wrap-json-params identity {:on-error custom-on-error})
+            request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{:foo \"bar}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= 400 (:status response)))
+        (is (= "The JSON provided is either malformed or invalid." (get-in response [:body :error]))))))
 
 (deftest test-json-response
   (testing "map body"
@@ -75,13 +109,13 @@
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
-  
+
   (testing "list body"
     (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
-  
+
   (testing "set body"
     (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
           response ((wrap-json-response handler) {})]
