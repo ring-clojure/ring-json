@@ -1,7 +1,8 @@
 (ns ring.middleware.json
   (:use ring.util.response)
   (:require [cheshire.core :as json]
-            [cheshire.parse :as parse]))
+            [cheshire.parse :as parse])
+  (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn- json-request? [request]
   (if-let [type (:content-type request)]
@@ -12,14 +13,40 @@
     (if-let [body (:body request)]
       (json/parse-string (slurp body) keywords?))))
 
+(defn- json-body
+  [request]
+  (if (json-request? request)
+    (if-let [body (:body request)]
+      body)))
+
+(defn- wrap-malformed-json
+  [handler & [{:keys [keywords? handle-malformed]}]]
+  (fn [request]
+    (try
+      (if-let [body (json-body request)]
+        (assoc request :body (json/parse-string (slurp body) keywords?)))
+      (catch JsonParseException e
+        (let [message (.getMessage e)]
+          (if handle-malformed
+            (handle-malformed {:message message})
+            {:status 400
+             :content-type "application/json"
+             :body (json/generate-string
+                     {:error message})})))
+      (finally
+        (handler request)))))
+
 (defn wrap-json-body
   "Middleware that parses the :body of JSON requests into a Clojure data
   structure."
-  [handler & [{:keys [keywords? bigdecimals?]}]]
+  [handler & [{:keys [keywords? bigdecimals? handle-malformed]}]]
   (fn [request]
     (binding [parse/*use-bigdecimals?* bigdecimals?]
-      (if-let [json (read-json request keywords?)]
-        (handler (assoc request :body json))
+      (if-let [body (json-body request)]
+        (let [h (-> handler
+                  (wrap-malformed-json {:keywords? keywords?
+                                        :handle-malformed handle-malformed}))]
+          (h (assoc request :body body)))
         (handler request)))))
 
 (defn wrap-json-params

@@ -57,6 +57,17 @@ map:
   (wrap-json-params handler))
 ```
 
+To gracefully handle a ```JsonParseException``` for malformed JSON, you can provide a response:
+
+```clojure
+
+(def app
+  (wrap-json-params handler {:handle-malformed (fn [{:keys [message]}]
+                                                 {:status 400
+                                                  :body
+                                                  {:error "The JSON provided is either malformed or invalid."}})}))
+```
+
 ## License
 
 Copyright © 2014 James Reeves
