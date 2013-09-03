@@ -57,6 +57,15 @@ map:
   (wrap-json-params handler))
 ```
 
+To gracefully handle an Exception during this phase and provide a custom
+response or handler:
+
+```clojure
+
+(def app
+  (wrap-json-params handler {:on-error (fn [handler req ex] {:status 400 :body {:error "The JSON provided is either malformed or invalid."}})}))
+```
+
 ## License
 
 Copyright © 2013 James Reeves
