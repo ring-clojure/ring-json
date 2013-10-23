@@ -26,11 +26,12 @@
   :params keys."
   [handler]
   (fn [request]
-    (if-let [json (read-json request)]
-      (handler (-> request
-                   (assoc :json-params json)
-                   (update-in [:params] merge json)))
-      (handler request))))
+    (let [json (read-json request)]
+      (if (and json (map? json))
+        (handler (-> request
+                     (assoc :json-params json)
+                     (update-in [:params] merge json)))
+        (handler request)))))
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a

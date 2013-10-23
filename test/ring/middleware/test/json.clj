@@ -55,7 +55,14 @@
                       :params {"id" 3}}
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
-        (is (= {"foo" "bar"} (:json-params response)))))))
+        (is (= {"foo" "bar"} (:json-params response)))))
+
+    (testing "array json body"
+      (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
+                      :body (string-input-stream "[\"foo\"]")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= {"id" 3} (:params response)))))))
 
 (deftest test-json-response
   (testing "map body"
