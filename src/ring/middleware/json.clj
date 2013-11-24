@@ -24,9 +24,9 @@
   "Middleware that converts request bodies in JSON format to a map of
   parameters, which is added to the request map on the :json-params and
   :params keys."
-  [handler]
+  [handler & [{:keys [keywords?]}]]
   (fn [request]
-    (let [json (read-json request)]
+    (let [json (read-json request keywords?)]
       (if (and json (map? json))
         (handler (-> request
                      (assoc :json-params json)

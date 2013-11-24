@@ -9,7 +9,7 @@
       (let [request  {:content-type "application/xml"
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
-        (is (= "<xml></xml>") (slurp (:body response)))))
+        (is (= "<xml></xml>" (slurp (:body response))))))
     
     (testing "json body"
       (let [request  {:content-type "application/json; charset=UTF-8"
@@ -37,7 +37,7 @@
                       :body (string-input-stream "<xml></xml>")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= "<xml></xml>") (slurp (:body response)))
+        (is (= "<xml></xml>" (slurp (:body response))))
         (is (= {"id" 3} (:params response)))
         (is (nil? (:json-params response)))))
 
@@ -46,6 +46,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
+        (is (= "" (slurp (:body response))))
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
 
@@ -54,6 +55,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
+        (is (= "" (slurp (:body response))))
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
 
@@ -62,7 +64,19 @@
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= {"id" 3} (:params response)))))))
+        (is (= "" (slurp (:body response))))
+        (is (= {"id" 3} (:params response)))
+        (is (nil? (:json-params response))))))
+
+  (let [handler  (wrap-json-params identity {:keywords? true})]
+    (testing "json body with keywords"
+      (let [request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{\"foo\": \"bar\"}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= "" (slurp (:body response))))
+        (is (= {"id" 3, :foo "bar"} (:params response)))
+        (is (= {:foo "bar"} (:json-params response)))))))
 
 (deftest test-json-response
   (testing "map body"
