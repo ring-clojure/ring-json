@@ -46,6 +46,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
+        (is (= "" (slurp (:body response))))
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
 
@@ -54,6 +55,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
+        (is (= "" (slurp (:body response))))
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
 
@@ -62,7 +64,9 @@
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= {"id" 3} (:params response))))))
+        (is (= "" (slurp (:body response))))
+        (is (= {"id" 3} (:params response)))
+        (is (nil? (:json-params response))))))
 
   (let [handler  (wrap-json-params identity {:keywords? true})]
     (testing "json body with keywords"
@@ -70,6 +74,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
+        (is (= "" (slurp (:body response))))
         (is (= {"id" 3, :foo "bar"} (:params response)))
         (is (= {:foo "bar"} (:json-params response)))))))
 
