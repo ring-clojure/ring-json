@@ -57,12 +57,22 @@
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
 
+    (testing "json patch body"
+      (let [json-string "[{\"op\": \"add\",\"path\":\"/foo\",\"value\":\"bar\"}]"
+            request  {:content-type "application/json-patch+json; charset=UTF-8"
+                      :body (string-input-stream json-string)
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= {"id" 3} (:params response)))
+        (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:json-params response)))))
+
     (testing "array json body"
       (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= {"id" 3} (:params response)))))))
+        (is (= {"id" 3} (:params response)))
+        (is (= ["foo"] (:json-params response)))))))
 
 (deftest test-json-response
   (testing "map body"

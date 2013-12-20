@@ -4,7 +4,7 @@
 
 (defn- json-request? [request]
   (if-let [type (:content-type request)]
-    (not (empty? (re-find #"^application/(vnd.+)?json" type)))))
+    (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
 (defn- read-json [request & [keywords?]]
   (if (json-request? request)
@@ -27,10 +27,12 @@
   [handler]
   (fn [request]
     (let [json (read-json request)]
-      (if (and json (map? json))
-        (handler (-> request
-                     (assoc :json-params json)
-                     (update-in [:params] merge json)))
+      (if json
+        (let [jp-req (assoc request :json-params json)]
+          (handler
+           (if (map? json)
+             (update-in jp-req[:params] merge json)
+             jp-req)))
         (handler request)))))
 
 (defn wrap-json-response
