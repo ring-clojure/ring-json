@@ -4,7 +4,7 @@
 
 (defn- json-request? [request]
   (if-let [type (:content-type request)]
-    (not (empty? (re-find #"^application/(vnd.+)?json" type)))))
+    (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
 (defn- read-json [request & [keywords?]]
   (if (json-request? request)
