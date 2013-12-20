@@ -21,7 +21,14 @@
       (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {"foo" "bar"} (:body response))))))
+        (is (= {"foo" "bar"} (:body response)))))
+
+    (testing "json patch body"
+      (let [json-string "[{\"op\": \"add\",\"path\":\"/foo\",\"value\": \"bar\"}]"
+            request  {:content-type "application/json-patch+json; charset=UTF-8"
+                      :body (string-input-stream json-string)}
+            response (handler request)]
+        (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:body response))))))
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
@@ -56,6 +63,14 @@
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
+
+    (testing "json schema body"
+      (let [request  {:content-type "application/schema+json; charset=UTF-8"
+                      :body (string-input-stream "{\"type\": \"schema\",\"properties\":{}}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= {"id" 3, "type" "schema", "properties" {}} (:params response)))
+        (is (= {"type" "schema", "properties" {}} (:json-params response)))))
 
     (testing "array json body"
       (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
