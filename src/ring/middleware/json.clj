@@ -42,7 +42,8 @@
   (fn [request]
     (let [response (handler request)]
       (if (coll? (:body response))
-        (let [json-response (update-in response [:body] json/generate-string options)]
+        (let [json-response (update-in response [:body] json/generate-stream
+                                       (java.io.StringWriter.) options)]
           (if (contains? (:headers response) "Content-Type")
             json-response
             (content-type json-response "application/json; charset=utf-8")))
