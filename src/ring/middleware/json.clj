@@ -15,9 +15,9 @@
 (defn wrap-json-body
   "Middleware that parses the :body of JSON requests into a Clojure data
   structure."
-  [handler & [{:keys [keywords? use-bigdecimals?]}]]
+  [handler & [{:keys [keywords? bigdecimals?]}]]
   (fn [request]
-    (binding [parse/*use-bigdecimals?* use-bigdecimals?]
+    (binding [parse/*use-bigdecimals?* bigdecimals?]
       (if-let [json (read-json request keywords?)]
         (handler (assoc request :body json))
         (handler request)))))

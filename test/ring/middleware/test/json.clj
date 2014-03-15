@@ -37,7 +37,7 @@
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
 
-  (let [handler (wrap-json-body identity {:keywords? true :use-bigdecimals? true})]
+  (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
     (testing "bigdecimal floats"
       (let [request  {:content-type "application/json"
                       :body (string-input-stream "{\"foo\": 5.5}")}
