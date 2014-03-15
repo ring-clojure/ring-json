@@ -84,7 +84,7 @@
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar"}})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "{\"foo\":\"bar\"}"))))
+      (is (= (.toString (:body response)) "{\"foo\":\"bar\"}"))))
 
   (testing "string body"
     (let [handler  (constantly {:status 200 :headers {} :body "foobar"})
@@ -96,28 +96,28 @@
     (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+      (is (= (.toString (:body response)) "[\"foo\",\"bar\"]"))))
   
   (testing "list body"
     (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+      (is (= (.toString (:body response)) "[\"foo\",\"bar\"]"))))
   
   (testing "set body"
     (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+      (is (= (.toString (:body response)) "[\"foo\",\"bar\"]"))))
 
   (testing "JSON options"
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
           response ((wrap-json-response handler {:pretty true}) {})]
-      (is (= (:body response)
+      (is (= (.toString (:body response))
              "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}"))))
 
   (testing "don’t overwrite Content-Type if already set"
     (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/json; some-param=some-value"} :body {:foo "bar"}})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; some-param=some-value"))
-      (is (= (:body response) "{\"foo\":\"bar\"}")))))
+      (is (= (.toString (:body response)) "{\"foo\":\"bar\"}")))))
