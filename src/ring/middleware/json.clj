@@ -26,14 +26,15 @@
   "Middleware that converts request bodies in JSON format to a map of
   parameters, which is added to the request map on the :json-params and
   :params keys."
-  [handler]
+  [handler & [{:keys [bigdecimals?]}]]
   (fn [request]
-    (let [json (read-json request)]
-      (if (and json (map? json))
-        (handler (-> request
-                     (assoc :json-params json)
-                     (update-in [:params] merge json)))
-        (handler request)))))
+    (binding [parse/*use-bigdecimals?* bigdecimals?]
+      (let [json (read-json request)]
+        (if (and json (map? json))
+          (handler (-> request
+                       (assoc :json-params json)
+                       (update-in [:params] merge json)))
+          (handler request))))))
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a
