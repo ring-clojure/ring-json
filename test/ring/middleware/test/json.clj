@@ -35,7 +35,15 @@
       (let [request  {:content-type "application/json"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response)))))))
+        (is (= {:foo "bar"} (:body response))))))
+
+  (let [handler (wrap-json-body identity {:keywords? true :use-bigdecimals? true})]
+    (testing "bigdecimal floats"
+      (let [request  {:content-type "application/json"
+                      :body (string-input-stream "{\"foo\": 5.5}")}
+            response (handler request)]
+        (is (decimal? (-> response :body :foo)))
+        (is (= {:foo 5.5M} (:body response)))))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
