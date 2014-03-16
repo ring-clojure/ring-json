@@ -35,7 +35,15 @@
       (let [request  {:content-type "application/json"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response)))))))
+        (is (= {:foo "bar"} (:body response))))))
+
+  (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
+    (testing "bigdecimal floats"
+      (let [request  {:content-type "application/json"
+                      :body (string-input-stream "{\"foo\": 5.5}")}
+            response (handler request)]
+        (is (decimal? (-> response :body :foo)))
+        (is (= {:foo 5.5M} (:body response)))))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
@@ -55,6 +63,17 @@
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
+
+    (testing "json body with bigdecimals"
+      (let [handler (wrap-json-params identity {:bigdecimals? true})
+            request  {:content-type "application/json; charset=UTF-8"
+                      :body (string-input-stream "{\"foo\": 5.5}")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (decimal? (get-in response [:params "foo"])))
+        (is (decimal? (get-in response [:json-params "foo"])))
+        (is (= {"id" 3, "foo" 5.5M} (:params response)))
+        (is (= {"foo" 5.5M} (:json-params response)))))
 
     (testing "custom json body"
       (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
