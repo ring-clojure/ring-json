@@ -1,7 +1,8 @@
 (ns ring.middleware.json
   (:use ring.util.response)
   (:require [cheshire.core :as json]
-            [cheshire.parse :as parse]))
+            [cheshire.parse :as parse])
+  (:import (com.fasterxml.jackson.core JsonParseException)))
 
 (defn- json-request? [request]
   (if-let [type (:content-type request)]
@@ -18,9 +19,12 @@
   [handler & [{:keys [keywords? bigdecimals?]}]]
   (fn [request]
     (binding [parse/*use-bigdecimals?* bigdecimals?]
-      (if-let [json (read-json request keywords?)]
-        (handler (assoc request :body json))
-        (handler request)))))
+      (try
+        (if-let [json (read-json request keywords?)]
+          (handler (assoc request :body json))
+          (handler request))
+        (catch JsonParseException e
+          (handler (assoc request :status 400)))))))
 
 (defn wrap-json-params
   "Middleware that converts request bodies in JSON format to a map of

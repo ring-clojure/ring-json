@@ -22,6 +22,26 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
+    
+    (testing "malformed json body"
+      (let [request-from-json (fn [json]
+                                {:content-type "application/json; charset=UTF-8"
+                                 :body (string-input-stream json)})]
+        (testing "non-closing tokens"
+          (let [json-string "{\"op\": \"add\"]"
+                request (request-from-json json-string)
+                response (handler request)]
+            (is (= 400 (:status response)))))
+        (testing "missing values"
+          (let [json-string "{\"op\":}"
+                request (request-from-json json-string)
+                response (handler request)]
+            (is (= 400 (:status response)))))
+        (testing "missing keys"
+          (let [json-string "{:\"op\"}"
+                request (request-from-json json-string)
+                response (handler request)]
+            (is (= 400 (:status response)))))))
 
     (testing "json patch body"
       (let [json-string "[{\"op\": \"add\",\"path\":\"/foo\",\"value\": \"bar\"}]"
