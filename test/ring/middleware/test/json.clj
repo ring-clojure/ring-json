@@ -30,20 +30,26 @@
             response (handler request)]
         (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:body response))))))
 
-  (let [handler (wrap-json-body identity {:keywords? true})]
-    (testing "keyword keys"
-      (let [request  {:content-type "application/json"
+    (testing "with keywords option"
+      (let [handler (wrap-json-body identity {:keywords? true})
+            request  {:content-type "application/json"
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
-        (is (= {:foo "bar"} (:body response))))))
+        (is (= {:foo "bar"} (:body response)))))
 
-  (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
-    (testing "bigdecimal floats"
-      (let [request  {:content-type "application/json"
-                      :body (string-input-stream "{\"foo\": 5.5}")}
-            response (handler request)]
-        (is (decimal? (-> response :body :foo)))
-        (is (= {:foo 5.5M} (:body response)))))))
+    (testing "invalid json body"
+      (testing "with custom malformed handler"
+        (let [malformed-handler (fn [{:keys [message]}]
+                                  {:status 400
+                                   :body
+                                   {:error "The JSON provided is either malformed or invalid."}})
+              handler (wrap-json-body identity {:handle-malformed malformed-handler})
+              request  {:content-type "application/json; charset=UTF-8"
+                        :body (string-input-stream "{:foo \"bar}")
+                        :params {"id" 3}}
+              response (handler request)]
+          (is (= 400 (:status response)))
+          (is (= "The JSON provided is either malformed or invalid." (get-in response [:body :error])))))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
