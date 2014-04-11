@@ -17,8 +17,8 @@ The `wrap-json-response` middleware will convert any response with a
 collection as a body (e.g. map, vector, set, seq, etc) into JSON:
 
 ```clojure
-(use 'ring.middleware.json
-     'ring.util.response)
+(use '[ring.middleware.json :only [wrap-json-response]]
+     '[ring.util.response :only [response]])
 
 (defn handler [request]
   (response {:foo "bar"}))
@@ -31,7 +31,8 @@ The `wrap-json-body` middleware will parse the body of any request
 with a JSON content-type into a Clojure data structure:
 
 ```clojure
-(use 'ring.middleware.json)
+(use '[ring.middleware.json :only [wrap-json-body]]
+     '[ring.util.response :only [response]])
 
 (defn handler [request]
   (prn (get-in request [:body "user"]))
@@ -47,7 +48,8 @@ content-type and body and merge the resulting parameters into a params
 map:
 
 ```clojure
-(use 'ring.middleware.json)
+(use '[ring.middleware.json :only [wrap-json-params]]
+     '[ring.util.response :only [response]])
 
 (defn handler [request]
   (prn (get-in request [:params "user"]))
