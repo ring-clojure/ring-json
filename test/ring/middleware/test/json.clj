@@ -28,7 +28,15 @@
             request  {:content-type "application/json-patch+json; charset=UTF-8"
                       :body (string-input-stream json-string)}
             response (handler request)]
-        (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:body response))))))
+        (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:body response)))))
+
+    (testing "malformed json"
+      (let [request {:content-type "application/json; charset=UTF-8"
+                     :body (string-input-stream "{\"foo\": \"bar\"")}]
+        (is (= (handler request)
+               {:status  400
+                :headers {"Content-Type" "text/plain"}
+                :body    "Malformed JSON in request body."})))))
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
@@ -43,7 +51,16 @@
                       :body (string-input-stream "{\"foo\": 5.5}")}
             response (handler request)]
         (is (decimal? (-> response :body :foo)))
-        (is (= {:foo 5.5M} (:body response)))))))
+        (is (= {:foo 5.5M} (:body response))))))
+
+  (testing "custom malformed json"
+    (let [malformed {:status 400
+                     :headers {"Content-Type" "text/html"}
+                     :body "<b>Your JSON is wrong!</b>"}
+          handler (wrap-json-body identity {:malformed-response malformed})
+          request {:content-type "application/json"
+                   :body (string-input-stream "{\"foo\": \"bar\"")}]
+      (is (= (handler request) malformed)))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
@@ -96,7 +113,24 @@
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= {"id" 3} (:params response)))))))
+        (is (= {"id" 3} (:params response)))))
+
+    (testing "malformed json"
+      (let [request {:content-type "application/json; charset=UTF-8"
+                     :body (string-input-stream "{\"foo\": \"bar\"")}]
+        (is (= (handler request)
+               {:status  400
+                :headers {"Content-Type" "text/plain"}
+                :body    "Malformed JSON in request body."})))))
+
+  (testing "custom malformed json"
+    (let [malformed {:status 400
+                     :headers {"Content-Type" "text/html"}
+                     :body "<b>Your JSON is wrong!</b>"}
+          handler (wrap-json-params identity {:malformed-response malformed})
+          request {:content-type "application/json"
+                   :body (string-input-stream "{\"foo\": \"bar\"")}]
+      (is (= (handler request) malformed)))))
 
 (deftest test-json-response
   (testing "map body"
