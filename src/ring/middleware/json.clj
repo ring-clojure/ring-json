@@ -45,11 +45,11 @@
   "Middleware that converts request bodies in JSON format to a map of
   parameters, which is added to the request map on the :json-params and
   :params keys."
-  [handler & [{:keys [bigdecimals? malformed-response]
+  [handler & [{:keys [keywords? bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
     (binding [parse/*use-bigdecimals?* bigdecimals?]
-      (if-let [[valid? json] (read-json request)]
+      (if-let [[valid? json] (read-json request keywords?)]
         (if valid?
           (handler (assoc-json-params request json))
           malformed-response)
