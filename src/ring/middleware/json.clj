@@ -1,4 +1,5 @@
 (ns ring.middleware.json
+  "Ring middleware for parsing JSON requests and generating JSON responses."
   (:use ring.util.response)
   (:require [cheshire.core :as json]
             [cheshire.parse :as parse]))
@@ -16,14 +17,23 @@
           (catch com.fasterxml.jackson.core.JsonParseException ex
             [false nil]))))))
 
-(def default-malformed-response
+(def ^{:doc "The default response to return when a JSON request is malformed."}
+  default-malformed-response
   {:status  400
    :headers {"Content-Type" "text/plain"}
    :body    "Malformed JSON in request body."})
 
 (defn wrap-json-body
-  "Middleware that parses the :body of JSON requests into a Clojure data
-  structure."
+  "Middleware that parses the body of JSON request maps, and replaces the :body
+  key with the parsed data structure. Requests without a JSON content type are
+  unaffected.
+
+  Accepts the following options:
+
+  :keywords?          - true if the keys of maps should be turned into keywords
+  :bigdecimals?       - true if BigDecimals should be used instead of Doubles
+  :malformed-response - a response map to return when the JSON is malformed"
+  {:arglists '([handler] [handler options])}
   [handler & [{:keys [keywords? bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
@@ -42,9 +52,17 @@
     request))
 
 (defn wrap-json-params
-  "Middleware that converts request bodies in JSON format to a map of
-  parameters, which is added to the request map on the :json-params and
-  :params keys."
+  "Middleware that parses the body of JSON requests into a map of parameters,
+  which are added to the request map on the :json-params and :params keys.
+
+  Accepts the following options:
+
+  :bigdecimals?       - true if BigDecimals should be used instead of Doubles
+  :malformed-response - a response map to return when the JSON is malformed
+
+  Use the standard Ring middleware, ring.middleware.keyword-params, to
+  convert the parameters into keywords."
+  {:arglists '([handler] [handler options])}
   [handler & [{:keys [bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
@@ -57,9 +75,13 @@
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a
-  JSON response. Accepts the following options:
-    :pretty            - when true, pretty-print the JSON
-    :escape-non-ascii  - when true, non-ASCII characters are escaped with \\u"
+  JSON response.
+
+  Accepts the following options:
+
+  :pretty            - true if the JSON should be pretty-printed
+  :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u"
+  {:arglists '([handler] [handler options])}
   [handler & [{:as options}]]
   (fn [request]
     (let [response (handler request)]
