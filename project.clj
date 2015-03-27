@@ -5,7 +5,8 @@
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.3.0"]
                  [cheshire "5.3.1"]
-                 [ring/ring-core "1.2.2"]]
+                 [ring/ring-core "1.3.2"]
+                 [ring/ring-defaults "0.1.4"]]
   :plugins [[codox "0.8.0"]]
   :profiles
   {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
