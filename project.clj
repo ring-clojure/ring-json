@@ -9,6 +9,7 @@
                  [ring/ring-defaults "0.1.4"]]
   :plugins [[codox "0.8.0"]]
   :profiles
-  {:1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
+  {:dev {:dependencies [[ring/ring-mock "0.2.0"]]}
+   :1.4 {:dependencies [[org.clojure/clojure "1.4.0"]]}
    :1.5 {:dependencies [[org.clojure/clojure "1.5.1"]]}
    :1.6 {:dependencies [[org.clojure/clojure "1.6.0"]]}})
