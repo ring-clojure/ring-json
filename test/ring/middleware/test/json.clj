@@ -1,8 +1,7 @@
 (ns ring.middleware.test.json
-  (:use ring.middleware.json
-        clojure.test
-        ring.util.io)
-  (:require [ring.mock.request :refer [request content-type body]]
+  (:require [clojure.test :refer :all]
+            [ring.middleware.json :refer :all]
+            [ring.mock.request :refer [request content-type body]]
             [ring.util.response :refer [response header]]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]))
