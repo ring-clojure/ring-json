@@ -136,44 +136,44 @@
 
 (deftest test-json-response
   (testing "map body"
-    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar"}})
-          response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "{\"foo\":\"bar\"}"))))
+    (let [handler (constantly (response {"foo" "bar"})) 
+          resp    ((wrap-json-response handler) {})]
+      (is (= (get-in resp [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (= (:body resp) "{\"foo\":\"bar\"}"))))
 
   (testing "string body"
-    (let [handler  (constantly {:status 200 :headers {} :body "foobar"})
-          response ((wrap-json-response handler) {})]
-      (is (= (:headers response) {}))
-      (is (= (:body response) "foobar"))))
+    (let [handler (constantly (response "foobar"))
+          resp    ((wrap-json-response handler) {})]
+      (is (= (:headers resp) {}))
+      (is (= (:body resp) "foobar"))))
 
   (testing "vector body"
-    (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
-          response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+    (let [handler (constantly (response [:foo :bar]))
+          resp    ((wrap-json-response handler) {})]
+      (is (= (get-in resp [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (= (:body resp) "[\"foo\",\"bar\"]"))))
   
   (testing "list body"
-    (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
-          response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+    (let [handler (constantly (response '(:foo :bar)))
+          resp    ((wrap-json-response handler) {})]
+      (is (= (get-in resp [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (= (:body resp) "[\"foo\",\"bar\"]"))))
   
   (testing "set body"
-    (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
-          response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (or (= (:body response) "[\"foo\",\"bar\"]")
-              (= (:body response) "[\"bar\",\"foo\"]")))))
+    (let [handler (constantly (response #{:foo :bar}))
+          resp    ((wrap-json-response handler) {})]
+      (is (= (get-in resp [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (or (= (:body resp) "[\"foo\",\"bar\"]")
+              (= (:body resp) "[\"bar\",\"foo\"]")))))
 
   (testing "JSON options"
-    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
-          response ((wrap-json-response handler {:pretty true}) {})]
-      (is (or (= (:body response) "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")
-              (= (:body response) "{\n  \"baz\" : \"quz\",\n  \"foo\" : \"bar\"\n}")))))
+    (let [handler (constantly (response {:foo "bar" :baz "quz"}))
+          resp    ((wrap-json-response handler {:pretty true}) {})]
+      (is (or (= (:body resp) "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")
+              (= (:body resp) "{\n  \"baz\" : \"quz\",\n  \"foo\" : \"bar\"\n}")))))
 
   (testing "don’t overwrite Content-Type if already set"
-    (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/json; some-param=some-value"} :body {:foo "bar"}})
-          response ((wrap-json-response handler) {})]
-      (is (= (get-in response [:headers "Content-Type"]) "application/json; some-param=some-value"))
-      (is (= (:body response) "{\"foo\":\"bar\"}")))))
+    (let [handler (constantly (header (response {:foo "bar"}) "Content-Type" "application/json; some-param=some-value"))
+          resp    ((wrap-json-response handler) {})]
+      (is (= (get-in resp [:headers "Content-Type"]) "application/json; some-param=some-value"))
+      (is (= (:body resp) "{\"foo\":\"bar\"}")))))
