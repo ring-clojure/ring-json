@@ -86,7 +86,8 @@
     (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
-      (is (= (:body response) "[\"foo\",\"bar\"]"))))
+      (is (or (= (:body response) "[\"foo\",\"bar\"]")
+              (= (:body response) "[\"bar\",\"foo\"]")))))
 
   (testing "JSON options"
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
