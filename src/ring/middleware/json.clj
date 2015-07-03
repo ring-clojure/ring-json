@@ -5,7 +5,7 @@
             [cheshire.parse :as parse]))
 
 (defn- json-request? [request]
-  (if-let [type (:content-type request)]
+  (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
 (defn- read-json [request & [keywords?]]
