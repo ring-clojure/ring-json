@@ -10,7 +10,7 @@
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
         (is (= "<xml></xml>") (slurp (:body response)))))
-    
+
     (testing "json body"
       (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
@@ -60,7 +60,17 @@
           handler (wrap-json-body identity {:malformed-response malformed})
           request {:headers {"content-type" "application/json"}
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
-      (is (= (handler request) malformed)))))
+      (is (= (handler request) malformed))))
+
+  (let [handler  (fn [_] {:status 200 :headers {} :body {:bigdecimals cheshire.parse/*use-bigdecimals?*}})]
+    (testing "don't overwrite bigdecimal binding"
+      (binding [cheshire.parse/*use-bigdecimals?* false]
+        (let [response ((wrap-json-body handler {:bigdecimals? true}) {})]
+          (is (= (get-in response [:body :bigdecimals]) false))))
+      (binding [cheshire.parse/*use-bigdecimals?* true]
+        (let [response ((wrap-json-body handler {:bigdecimals? false}) {})]
+          (is (= (get-in response [:body :bigdecimals]) true)))))))
+
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
@@ -130,7 +140,16 @@
           handler (wrap-json-params identity {:malformed-response malformed})
           request {:headers {"content-type" "application/json"}
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
-      (is (= (handler request) malformed)))))
+      (is (= (handler request) malformed))))
+
+  (testing "don't overwrite bigdecimal binding"
+    (let [handler  (fn [_] {:status 200 :headers {} :body {:bigdecimals cheshire.parse/*use-bigdecimals?*}})]
+      (binding [cheshire.parse/*use-bigdecimals?* false]
+        (let [response ((wrap-json-params handler {:bigdecimals? true}) {})]
+          (is (= (get-in response [:body :bigdecimals]) false))))
+      (binding [cheshire.parse/*use-bigdecimals?* true]
+        (let [response ((wrap-json-params handler {:bigdecimals? false}) {})]
+          (is (= (get-in response [:body :bigdecimals]) true)))))))
 
 (deftest test-json-response
   (testing "map body"
@@ -150,13 +169,13 @@
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
-  
+
   (testing "list body"
     (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
-  
+
   (testing "set body"
     (let [handler  (constantly {:status 200 :headers {} :body #{:foo :bar}})
           response ((wrap-json-response handler) {})]

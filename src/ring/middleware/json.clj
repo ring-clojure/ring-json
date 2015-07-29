@@ -8,14 +8,15 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- read-json [request & [keywords?]]
+(defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
   (if (json-request? request)
     (if-let [body (:body request)]
       (let [body-string (slurp body)]
-        (try
-          [true (json/parse-string body-string keywords?)]
-          (catch com.fasterxml.jackson.core.JsonParseException ex
-            [false nil]))))))
+        (binding [parse/*use-bigdecimals?* bigdecimals?]
+          (try
+            [true (json/parse-string body-string keywords?)]
+            (catch com.fasterxml.jackson.core.JsonParseException ex
+              [false nil])))))))
 
 (def ^{:doc "The default response to return when a JSON request is malformed."}
   default-malformed-response
@@ -37,12 +38,12 @@
   [handler & [{:keys [keywords? bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
-    (binding [parse/*use-bigdecimals?* bigdecimals?]
-      (if-let [[valid? json] (read-json request keywords?)]
-        (if valid?
-          (handler (assoc request :body json))
-          malformed-response)
-        (handler request)))))
+    (if-let [[valid? json]
+             (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+      (if valid?
+        (handler (assoc request :body json))
+        malformed-response)
+      (handler request))))
 
 (defn- assoc-json-params [request json]
   (if (map? json)
@@ -66,12 +67,11 @@
   [handler & [{:keys [bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
-    (binding [parse/*use-bigdecimals?* bigdecimals?]
-      (if-let [[valid? json] (read-json request)]
-        (if valid?
-          (handler (assoc-json-params request json))
-          malformed-response)
-        (handler request)))))
+    (if-let [[valid? json] (read-json request {:bigdecimals? bigdecimals?})]
+      (if valid?
+        (handler (assoc-json-params request json))
+        malformed-response)
+      (handler request))))
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a
