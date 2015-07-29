@@ -6,32 +6,32 @@
 (deftest test-json-body
   (let [handler (wrap-json-body identity)]
     (testing "xml body"
-      (let [request  {:content-type "application/xml"
+      (let [request  {:headers {"content-type" "application/xml"}
                       :body (string-input-stream "<xml></xml>")}
             response (handler request)]
         (is (= "<xml></xml>") (slurp (:body response)))))
     
     (testing "json body"
-      (let [request  {:content-type "application/json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
 
     (testing "custom json body"
-      (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
 
     (testing "json patch body"
       (let [json-string "[{\"op\": \"add\",\"path\":\"/foo\",\"value\": \"bar\"}]"
-            request  {:content-type "application/json-patch+json; charset=UTF-8"
+            request  {:headers {"content-type" "application/json-patch+json; charset=UTF-8"}
                       :body (string-input-stream json-string)}
             response (handler request)]
         (is (= [{"op" "add" "path" "/foo" "value" "bar"}] (:body response)))))
 
     (testing "malformed json"
-      (let [request {:content-type "application/json; charset=UTF-8"
+      (let [request {:headers {"content-type" "application/json; charset=UTF-8"}
                      :body (string-input-stream "{\"foo\": \"bar\"")}]
         (is (= (handler request)
                {:status  400
@@ -40,14 +40,14 @@
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
-      (let [request  {:content-type "application/json"
+      (let [request  {:headers {"content-type" "application/json"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
 
   (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
     (testing "bigdecimal floats"
-      (let [request  {:content-type "application/json"
+      (let [request  {:headers {"content-type" "application/json"}
                       :body (string-input-stream "{\"foo\": 5.5}")}
             response (handler request)]
         (is (decimal? (-> response :body :foo)))
@@ -58,14 +58,14 @@
                      :headers {"Content-Type" "text/html"}
                      :body "<b>Your JSON is wrong!</b>"}
           handler (wrap-json-body identity {:malformed-response malformed})
-          request {:content-type "application/json"
+          request {:headers {"content-type" "application/json"}
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
       (is (= (handler request) malformed)))))
 
 (deftest test-json-params
   (let [handler  (wrap-json-params identity)]
     (testing "xml body"
-      (let [request  {:content-type "application/xml"
+      (let [request  {:headers {"content-type" "application/xml"}
                       :body (string-input-stream "<xml></xml>")
                       :params {"id" 3}}
             response (handler request)]
@@ -74,7 +74,7 @@
         (is (nil? (:json-params response)))))
 
     (testing "json body"
-      (let [request  {:content-type "application/json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
@@ -83,7 +83,7 @@
 
     (testing "json body with bigdecimals"
       (let [handler (wrap-json-params identity {:bigdecimals? true})
-            request  {:content-type "application/json; charset=UTF-8"
+            request  {:headers {"content-type" "application/json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": 5.5}")
                       :params {"id" 3}}
             response (handler request)]
@@ -93,7 +93,7 @@
         (is (= {"foo" 5.5M} (:json-params response)))))
 
     (testing "custom json body"
-      (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")
                       :params {"id" 3}}
             response (handler request)]
@@ -101,7 +101,7 @@
         (is (= {"foo" "bar"} (:json-params response)))))
 
     (testing "json schema body"
-      (let [request  {:content-type "application/schema+json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/schema+json; charset=UTF-8"}
                       :body (string-input-stream "{\"type\": \"schema\",\"properties\":{}}")
                       :params {"id" 3}}
             response (handler request)]
@@ -109,14 +109,14 @@
         (is (= {"type" "schema", "properties" {}} (:json-params response)))))
 
     (testing "array json body"
-      (let [request  {:content-type "application/vnd.foobar+json; charset=UTF-8"
+      (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
         (is (= {"id" 3} (:params response)))))
 
     (testing "malformed json"
-      (let [request {:content-type "application/json; charset=UTF-8"
+      (let [request {:headers {"content-type" "application/json; charset=UTF-8"}
                      :body (string-input-stream "{\"foo\": \"bar\"")}]
         (is (= (handler request)
                {:status  400
@@ -128,7 +128,7 @@
                      :headers {"Content-Type" "text/html"}
                      :body "<b>Your JSON is wrong!</b>"}
           handler (wrap-json-params identity {:malformed-response malformed})
-          request {:content-type "application/json"
+          request {:headers {"content-type" "application/json"}
                    :body (string-input-stream "{\"foo\": \"bar\"")}]
       (is (= (handler request) malformed)))))
 
