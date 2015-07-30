@@ -1,7 +1,7 @@
 (ns ring.middleware.test.json
-  (:use ring.middleware.json
-        clojure.test
-        ring.util.io))
+  (:require [clojure.test :refer :all]
+            [ring.middleware.json :refer :all]
+            [ring.util.io :refer [string-input-stream]]))
 
 (deftest test-json-body
   (let [handler (wrap-json-body identity)]

@@ -1,8 +1,8 @@
 (ns ring.middleware.json
   "Ring middleware for parsing JSON requests and generating JSON responses."
-  (:use ring.util.response)
   (:require [cheshire.core :as json]
-            [cheshire.parse :as parse]))
+            [cheshire.parse :as parse]
+            [ring.util.response :refer [content-type]]))
 
 (defn- json-request? [request]
   (if-let [type (get-in request [:headers "content-type"])]
