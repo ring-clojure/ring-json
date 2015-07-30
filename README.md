@@ -11,7 +11,10 @@ To install, add the following to your project `:dependencies`:
 
     [ring/ring-json "0.3.1"]
 
+
 ## Usage
+
+#### wrap-json-response
 
 The `wrap-json-response` middleware will convert any response with a
 collection as a body (e.g. map, vector, set, seq, etc) into JSON:
@@ -26,6 +29,9 @@ collection as a body (e.g. map, vector, set, seq, etc) into JSON:
 (def app
   (wrap-json-response handler))
 ```
+
+
+#### wrap-json-body
 
 The `wrap-json-body` middleware will parse the body of any request
 with a JSON content-type into a Clojure data structure, and assign it
@@ -45,6 +51,8 @@ This is the preferred way of handling JSON requests.
   (wrap-json-body handler {:keywords? true :bigdecimals? true}))
 ```
 
+
+#### wrap-json-params
 
 The `wrap-json-params` middleware is an alternative to
 `wrap-json-body` for when it's convenient to treat a JSON request as a
@@ -76,6 +84,7 @@ option. Instead, use the standard Ring `wrap-keyword-params` function:
       wrap-keyword-params
       wrap-json-params))
 ```
+
 
 ## License
 
