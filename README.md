@@ -28,7 +28,10 @@ collection as a body (e.g. map, vector, set, seq, etc) into JSON:
 ```
 
 The `wrap-json-body` middleware will parse the body of any request
-with a JSON content-type into a Clojure data structure:
+with a JSON content-type into a Clojure data structure, and assign it
+to the `:body` key.
+
+This is the preferred way of handling JSON requests.
 
 ```clojure
 (use '[ring.middleware.json :only [wrap-json-body]]
@@ -43,10 +46,11 @@ with a JSON content-type into a Clojure data structure:
 ```
 
 
-The `wrap-json-params` middleware will parse any request with a JSON
-content-type and body. A map is expected, and will be assigned to the
-`:json-params` key on the request map. The parameters will also be
-merged into the standard `:params` map:
+The `wrap-json-params` middleware is an alternative to
+`wrap-json-body` for when it's convenient to treat a JSON request as a
+map of parameters. Rather than replace the `:body` key, the parsed
+data structure will be assigned to the `:json-params`. The parameters
+will also be merged into the standard `:params` map.
 
 ```clojure
 (require '[ring.middleware.json :refer [wrap-json-params]]
