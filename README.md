@@ -44,8 +44,9 @@ with a JSON content-type into a Clojure data structure:
 
 
 The `wrap-json-params` middleware will parse any request with a JSON
-content-type and body and merge the resulting parameters into a params
-map:
+content-type and body. A map is expected, and will be assigned to the
+`:json-params` key on the request map. The parameters will also be
+merged into the standard `:params` map:
 
 ```clojure
 (require '[ring.middleware.json :refer [wrap-json-params]]
@@ -57,6 +58,19 @@ map:
 
 (def app
   (wrap-json-params handler))
+```
+
+Note that Ring parameter maps use strings for keys. For consistency,
+this means that `wrap-json-params` does not have a `:keywords?`
+option. Instead, use the standard Ring `wrap-keyword-params` function:
+
+```clojure
+(require '[ring.middleware.keyword-params :refer [wrap-keyword-params]])
+
+(def app
+  (-> handler
+      wrap-keyword-params
+      wrap-json-params))
 ```
 
 ## License
