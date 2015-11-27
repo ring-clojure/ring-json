@@ -45,6 +45,21 @@
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
 
+  (let [handler (wrap-json-body identity {:key-fn clojure.string/upper-case})]
+    (testing "transform keys"
+      (let [request  {:headers {"content-type" "application/json"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {"FOO" "bar"} (:body response))))))
+
+  (let [handler (wrap-json-body identity {:key-fn clojure.string/upper-case
+                                          :keywords? true})]
+    (testing "transform keys with keywords"
+      (let [request  {:headers {"content-type" "application/json"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {:FOO "bar"} (:body response))))))
+
   (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
     (testing "bigdecimal floats"
       (let [request  {:headers {"content-type" "application/json"}
@@ -183,11 +198,17 @@
       (is (or (= (:body response) "[\"foo\",\"bar\"]")
               (= (:body response) "[\"bar\",\"foo\"]")))))
 
-  (testing "JSON options"
+  (testing "JSON pretty-print"
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
           response ((wrap-json-response handler {:pretty true}) {})]
       (is (or (= (:body response) "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")
               (= (:body response) "{\n  \"baz\" : \"quz\",\n  \"foo\" : \"bar\"\n}")))))
+
+  (testing "JSON transform keys"
+    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
+          response ((wrap-json-response handler {:key-fn #(-> % name clojure.string/upper-case)}) {})]
+      (is (or (= (:body response) "{\"FOO\":\"bar\",\"BAZ\":\"quz\"}")
+              (= (:body response) "{\"BAZ\":\"quz\",\"FOO\":\"bar\"}")))))
 
   (testing "don’t overwrite Content-Type if already set"
     (let [handler  (constantly {:status 200 :headers {"Content-Type" "application/json; some-param=some-value"} :body {:foo "bar"}})

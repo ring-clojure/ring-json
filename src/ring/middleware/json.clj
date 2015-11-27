@@ -8,13 +8,20 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
+(defn- ->key-fn [key-fn keywords?]
+  (if (fn? key-fn)
+    (if keywords?
+      #(-> % key-fn keyword)
+      key-fn)
+    keywords?))
+
+(defn- read-json [request & [{:keys [key-fn keywords? bigdecimals?]}]]
   (if (json-request? request)
     (if-let [body (:body request)]
       (let [body-string (slurp body)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-string body-string keywords?)]
+            [true (json/parse-string body-string (->key-fn key-fn keywords?))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
@@ -31,15 +38,16 @@
 
   Accepts the following options:
 
+  :key-fn             - a function to transform the keys of maps
   :keywords?          - true if the keys of maps should be turned into keywords
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
   :malformed-response - a response map to return when the JSON is malformed"
   {:arglists '([handler] [handler options])}
-  [handler & [{:keys [keywords? bigdecimals? malformed-response]
+  [handler & [{:keys [key-fn keywords? bigdecimals? malformed-response]
                :or {malformed-response default-malformed-response}}]]
   (fn [request]
     (if-let [[valid? json]
-             (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+             (read-json request {:key-fn key-fn :keywords? keywords? :bigdecimals? bigdecimals?})]
       (if valid?
         (handler (assoc request :body json))
         malformed-response)
@@ -80,7 +88,8 @@
   Accepts the following options:
 
   :pretty            - true if the JSON should be pretty-printed
-  :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u"
+  :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u
+  :key-fn            - a function to transform the keys of maps in the JSON"
   {:arglists '([handler] [handler options])}
   [handler & [{:as options}]]
   (fn [request]
