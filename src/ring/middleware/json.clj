@@ -8,20 +8,15 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- ->key-fn [key-fn keywords?]
-  (if (fn? key-fn)
-    (if keywords?
-      #(-> % key-fn keyword)
-      key-fn)
-    keywords?))
-
 (defn- read-json [request & [{:keys [key-fn keywords? bigdecimals?]}]]
+  {:pre [(or (nil? key-fn) (fn? key-fn))]}
   (if (json-request? request)
     (if-let [body (:body request)]
-      (let [body-string (slurp body)]
+      (let [body-string (slurp body)
+            key-fn (if (and key-fn keywords?) #(-> % key-fn keyword) key-fn)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-string body-string (->key-fn key-fn keywords?))]
+            [true (json/parse-string body-string (or key-fn keywords?))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 

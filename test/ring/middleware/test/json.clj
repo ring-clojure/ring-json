@@ -60,6 +60,12 @@
             response (handler request)]
         (is (= {:FOO "bar"} (:body response))))))
 
+  (let [handler (wrap-json-body identity {:key-fn 123})]
+    (testing "bad transform keys arg"
+      (let [request  {:headers {"content-type" "application/json"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}]
+        (is (thrown? AssertionError (handler request))))))
+
   (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
     (testing "bigdecimal floats"
       (let [request  {:headers {"content-type" "application/json"}

@@ -52,11 +52,10 @@ This is the preferred way of handling JSON requests.
 ```
 
 
-#### Transforming JSON map keys
+##### Transforming JSON map keys
 
-Both `wrap-json-response` and `wrap-json-body` support the `:keywords?` option
-to automatically convert the keys of JSON maps to/from strings/keywords.
-Alternatively, a function can be provided which further customizes those keys:
+Both `wrap-json-response` and `wrap-json-body` support the `:key-fn` option
+which takes a transform function in order to customize the JSON map keys:
 
 ```clojure
 (use '[ring.middleware.json :only [wrap-json-body]]
@@ -70,7 +69,7 @@ Alternatively, a function can be provided which further customizes those keys:
   (wrap-json-body handler {:key-fn clojure.string/lower-case}))
 ```
 
-Note: both `:key-fn` and `:keywords?` can be supplied at the same time. 
+Note: for `wrap-json-body`, both `:key-fn` and `:keywords?` can be supplied at the same time. 
 
 
 #### wrap-json-params
