@@ -1,5 +1,6 @@
 (ns ring.middleware.test.json
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [ring.middleware.json :refer :all]
             [ring.util.io :refer [string-input-stream]]))
 
@@ -45,14 +46,14 @@
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
 
-  (let [handler (wrap-json-body identity {:key-fn clojure.string/upper-case})]
+  (let [handler (wrap-json-body identity {:key-fn str/upper-case})]
     (testing "transform keys"
       (let [request  {:headers {"content-type" "application/json"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"FOO" "bar"} (:body response))))))
 
-  (let [handler (wrap-json-body identity {:key-fn clojure.string/upper-case
+  (let [handler (wrap-json-body identity {:key-fn str/upper-case
                                           :keywords? true})]
     (testing "transform keys with keywords"
       (let [request  {:headers {"content-type" "application/json"}
@@ -212,7 +213,7 @@
 
   (testing "JSON transform keys"
     (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
-          response ((wrap-json-response handler {:key-fn #(-> % name clojure.string/upper-case)}) {})]
+          response ((wrap-json-response handler {:key-fn (comp str/upper-case name)}) {})]
       (is (or (= (:body response) "{\"FOO\":\"bar\",\"BAZ\":\"quz\"}")
               (= (:body response) "{\"BAZ\":\"quz\",\"FOO\":\"bar\"}")))))
 

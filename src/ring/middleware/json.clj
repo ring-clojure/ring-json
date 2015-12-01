@@ -12,11 +12,11 @@
   {:pre [(or (nil? key-fn) (fn? key-fn))]}
   (if (json-request? request)
     (if-let [body (:body request)]
-      (let [body-string (slurp body)
-            key-fn (if (and key-fn keywords?) #(-> % key-fn keyword) key-fn)]
+      (let [body-string (slurp body)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-string body-string (or key-fn keywords?))]
+            [true (json/parse-string body-string
+                                     (comp (if keywords? keyword identity) (or key-fn identity)))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
