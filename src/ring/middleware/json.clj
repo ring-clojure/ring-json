@@ -8,10 +8,15 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
+(defn- body-as-string [request-body]
+  (if (string? request-body)
+    request-body
+    (slurp request-body)))
+
 (defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
   (if (json-request? request)
     (if-let [body (:body request)]
-      (let [body-string (slurp body)]
+      (let [body-string (body-as-string body)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
             [true (json/parse-string body-string keywords?)]
