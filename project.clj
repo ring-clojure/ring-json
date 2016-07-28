@@ -4,7 +4,7 @@
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [cheshire "5.5.0"]
+                 [cheshire "5.6.3"]
                  [ring/ring-core "1.4.0"]]
   :plugins [[codox "0.8.13"]]
   :profiles
