@@ -24,6 +24,14 @@
    :headers {"Content-Type" "text/plain"}
    :body    "Malformed JSON in request body."})
 
+(defn json-body-request
+  "Parse a JSON request body and assoc it back into the :body key. Returns nil
+  if the JSON is malformed. See: wrap-json-body."
+  [request {:keys [keywords? bigdecimals?]}]
+  (if-let [[valid? json] (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+    (if valid? (assoc request :body json))
+    request))
+
 (defn wrap-json-body
   "Middleware that parses the body of JSON request maps, and replaces the :body
   key with the parsed data structure. Requests without a JSON content type are
@@ -35,21 +43,33 @@
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
   :malformed-response - a response map to return when the JSON is malformed"
   {:arglists '([handler] [handler options])}
-  [handler & [{:keys [keywords? bigdecimals? malformed-response]
-               :or {malformed-response default-malformed-response}}]]
-  (fn [request]
-    (if-let [[valid? json]
-             (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
-      (if valid?
-        (handler (assoc request :body json))
-        malformed-response)
-      (handler request))))
+  [handler & [{:keys [malformed-response]
+               :or {malformed-response default-malformed-response}
+               :as options}]]
+  (fn
+    ([request]
+     (if-let [request (json-body-request request options)]
+       (handler request)
+       malformed-response))
+    ([request respond raise]
+     (if-let [request (json-body-request request options)]
+       (handler request respond raise)
+       (respond malformed-response)))))
 
 (defn- assoc-json-params [request json]
   (if (map? json)
     (-> request
         (assoc :json-params json)
         (update-in [:params] merge json))
+    request))
+
+(defn json-params-request
+  "Parse the body of JSON requests into a map of parameters, which are added
+  to the request map on the :json-params and :params keys. Returns nil if the
+  JSON is malformed. See: wrap-json-params."
+  [request {:keys [bigdecimals?]}]
+  (if-let [[valid? json] (read-json request {:bigdecimals? bigdecimals?})]
+    (if valid? (assoc-json-params request json))
     request))
 
 (defn wrap-json-params
@@ -64,14 +84,29 @@
   Use the standard Ring middleware, ring.middleware.keyword-params, to
   convert the parameters into keywords."
   {:arglists '([handler] [handler options])}
-  [handler & [{:keys [bigdecimals? malformed-response]
-               :or {malformed-response default-malformed-response}}]]
-  (fn [request]
-    (if-let [[valid? json] (read-json request {:bigdecimals? bigdecimals?})]
-      (if valid?
-        (handler (assoc-json-params request json))
-        malformed-response)
-      (handler request))))
+  [handler & [{:keys [malformed-response]
+               :or {malformed-response default-malformed-response}
+               :as options}]]
+  (fn
+    ([request]
+     (if-let [request (json-params-request request options)]
+       (handler request)
+       malformed-response))
+    ([request respond raise]
+     (if-let [request (json-params-request request options)]
+       (handler request respond raise)
+       (respond malformed-response)))))
+
+(defn json-response
+  "Converts responses with a map or a vector for a body into a JSON response.
+  See: wrap-json-response."
+  [response options]
+  (if (coll? (:body response))
+    (let [json-resp (update-in response [:body] json/generate-string options)]
+      (if (contains? (:headers response) "Content-Type")
+        json-resp
+        (content-type json-resp "application/json; charset=utf-8")))
+    response))
 
 (defn wrap-json-response
   "Middleware that converts responses with a map or a vector for a body into a
@@ -83,11 +118,8 @@
   :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u"
   {:arglists '([handler] [handler options])}
   [handler & [{:as options}]]
-  (fn [request]
-    (let [response (handler request)]
-      (if (coll? (:body response))
-        (let [json-response (update-in response [:body] json/generate-string options)]
-          (if (contains? (:headers response) "Content-Type")
-            json-response
-            (content-type json-response "application/json; charset=utf-8")))
-        response))))
+  (fn
+    ([request]
+     (json-response (handler request) options))
+    ([request respond raise]
+     (handler request (fn [response] (respond (json-response response options))) raise))))
