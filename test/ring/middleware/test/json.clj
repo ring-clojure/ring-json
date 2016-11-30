@@ -17,6 +17,12 @@
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
 
+    (testing "json body as string"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
+                      :body "{\"foo\": \"bar\"}"}
+            response (handler request)]
+        (is (= {"foo" "bar"} (:body response)))))
+
     (testing "custom json body"
       (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
