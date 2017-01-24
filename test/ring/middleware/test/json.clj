@@ -16,7 +16,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
-
+    
     (testing "custom json body"
       (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
@@ -36,7 +36,13 @@
         (is (= (handler request)
                {:status  400
                 :headers {"Content-Type" "text/plain"}
-                :body    "Malformed JSON in request body."})))))
+                :body    "Malformed JSON in request body."}))))
+
+    (testing "json body with GBK"
+      (let [request  {:headers {"content-type" "application/json; charset=GBK"}
+                      :body (string-input-stream (String. (.getBytes "{\"foo\": \"你好\"}")) "GBK")}
+            response (handler request)]
+        (is (= {"foo" "你好"} (:body response))))))
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
@@ -197,7 +203,15 @@
         (is (= (handler request)
                {:status  400
                 :headers {"Content-Type" "text/plain"}
-                :body    "Malformed JSON in request body."})))))
+                :body    "Malformed JSON in request body."}))))
+
+    (testing "json body with GBK"
+      (let [request  {:headers {"content-type" "application/json; charset=GBK"}
+                      :body (string-input-stream (String. (.getBytes "{\"foo\": \"你好\"}")) "GBK")
+                      :params {"id" 3}}
+            response (handler request)]
+        (is (= {"id" 3, "foo" "你好"} (:params response)))
+        (is (= {"foo" "你好"} (:json-params response))))))
 
   (testing "custom malformed json"
     (let [malformed {:status 400
