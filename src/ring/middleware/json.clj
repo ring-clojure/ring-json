@@ -8,13 +8,16 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
+(defn- read-json [request & [{:keys [keywords? bigdecimals? key-fn]}]]
   (if (json-request? request)
     (if-let [body (:body request)]
       (let [body-string (slurp body)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-string body-string keywords?)]
+            [true
+               (if key-fn
+                 (json/parse-string body-string key-fn)
+                 (json/parse-string body-string keywords?))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
@@ -27,8 +30,8 @@
 (defn json-body-request
   "Parse a JSON request body and assoc it back into the :body key. Returns nil
   if the JSON is malformed. See: wrap-json-body."
-  [request {:keys [keywords? bigdecimals?]}]
-  (if-let [[valid? json] (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+  [request {:keys [keywords? bigdecimals? key-fn]}]
+  (if-let [[valid? json] (read-json request {:keywords? keywords? :bigdecimals? bigdecimals? :key-fn key-fn})]
     (if valid? (assoc request :body json))
     request))
 
@@ -41,6 +44,7 @@
 
   :keywords?          - true if the keys of maps should be turned into keywords
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
+  :key-fn             - a function to convert the keywords
   :malformed-response - a response map to return when the JSON is malformed"
   {:arglists '([handler] [handler options])}
   [handler & [{:keys [malformed-response]

@@ -45,6 +45,13 @@
             response (handler request)]
         (is (= {:foo "bar"} (:body response))))))
 
+  (let [handler (wrap-json-body identity {:key-fn (fn [k] (keyword (.toUpperCase k)))})]
+    (testing "keyword keys with :key-fn"
+      (let [request  {:headers {"content-type" "application/json"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {:FOO "bar"} (:body response))))))
+
   (let [handler (wrap-json-body identity {:keywords? true :bigdecimals? true})]
     (testing "bigdecimal floats"
       (let [request  {:headers {"content-type" "application/json"}
