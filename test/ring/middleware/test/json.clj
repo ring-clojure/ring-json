@@ -36,7 +36,19 @@
         (is (= (handler request)
                {:status  400
                 :headers {"Content-Type" "text/plain"}
-                :body    "Malformed JSON in request body."})))))
+                :body    "Malformed JSON in request body."}))))
+
+    (testing "json body not UTF-8 encoded"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-16"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}" "UTF-16")}
+            response (handler request)]
+        (is (= {"foo" "bar"} (:body response)))))
+
+    (testing "json body defaults to parse as UTF-8 encoded when not specified"
+      (let [request  {:headers {"content-type" "application/json;"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {"foo" "bar"} (:body response))))))
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
