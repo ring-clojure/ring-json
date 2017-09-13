@@ -189,7 +189,8 @@
                       :body (string-input-stream "[\"foo\"]")
                       :params {"id" 3}}
             response (handler request)]
-        (is (= {"id" 3} (:params response)))))
+        (is (= {"id" 3} (:params response)))
+        (is (= ["foo"] (:json-params response)))))
 
     (testing "malformed json"
       (let [request {:headers {"content-type" "application/json; charset=UTF-8"}
