@@ -57,11 +57,15 @@
        (respond malformed-response)))))
 
 (defn- assoc-json-params [request json]
-  (if (map? json)
-    (-> request
-        (assoc :json-params json)
-        (update-in [:params] merge json))
-    request))
+  (cond-> request
+    (map? json)
+    (update-in [:params] merge json)
+
+    json
+    (assoc :json-params json)
+
+    :else
+    identity))
 
 (defn json-params-request
   "Parse the body of JSON requests into a map of parameters, which are added
