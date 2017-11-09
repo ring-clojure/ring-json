@@ -2,7 +2,8 @@
   "Ring middleware for parsing JSON requests and generating JSON responses."
   (:require [cheshire.core :as json]
             [cheshire.parse :as parse]
-            [ring.util.response :refer [content-type]]))
+            [ring.util.response :refer [content-type]]
+            [ring.util.request :refer [character-encoding]]))
 
 (defn- json-request? [request]
   (if-let [type (get-in request [:headers "content-type"])]
@@ -11,7 +12,9 @@
 (defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
   (if (json-request? request)
     (if-let [body (:body request)]
-      (let [body-string (slurp body)]
+      (let [encoding (or (character-encoding request)
+                          "UTF-8")
+            body-string (slurp body :encoding encoding)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
             [true (json/parse-string body-string keywords?)]
