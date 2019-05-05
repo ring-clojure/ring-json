@@ -337,6 +337,20 @@
       (is (= (get-in response [:headers "Content-Type"]) "application/json; some-param=some-value"))
       (is (= (:body response) "{\"foo\":\"bar\"}")))))
 
+(deftest test-json-response-streaming
+  (testing "streaming vector body"
+    (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
+          response ((wrap-json-response handler {:stream? true}) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (= (slurp (:body response)) "[\"foo\",\"bar\"]"))))
+
+  (testing "streaming map body with options"
+    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
+          response ((wrap-json-response handler {:stream? true :pretty true}) {})]
+      (is (let [body (slurp (:body response))]
+            (or (= body "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")
+                (= body "{\n  \"baz\" : \"quz\",\n  \"foo\" : \"bar\"\n}")))))))
+
 (deftest test-json-response-cps
   (testing "map body"
     (let [handler  (fn [_ respond _] (respond {:status 200 :headers {} :body {:foo "bar"}}))
