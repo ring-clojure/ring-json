@@ -1,6 +1,7 @@
 (ns ring.middleware.test.json
   (:require [clojure.test :refer :all]
             [ring.middleware.json :refer :all]
+            [ring.core.protocols :refer [write-body-to-stream]]
             [ring.util.io :refer [string-input-stream]]))
 
 (deftest test-json-body
@@ -336,6 +337,25 @@
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; some-param=some-value"))
       (is (= (:body response) "{\"foo\":\"bar\"}")))))
+
+(defn streamable->string [body]
+  (let [baos (java.io.ByteArrayOutputStream.)]
+    (write-body-to-stream body nil baos)
+    (.toString baos "utf-8")))
+
+(deftest test-json-response-streaming
+  (testing "streaming vector body"
+    (let [handler  (constantly {:status 200 :headers {} :body [:foo :bar]})
+          response ((wrap-json-response handler {:stream? true}) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (= (streamable->string (:body response)) "[\"foo\",\"bar\"]"))))
+
+  (testing "streaming map body with options"
+    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
+          response ((wrap-json-response handler {:stream? true :pretty true}) {})]
+      (is (let [body (streamable->string (:body response))]
+            (or (= body "{\n  \"foo\" : \"bar\",\n  \"baz\" : \"quz\"\n}")
+                (= body "{\n  \"baz\" : \"quz\",\n  \"foo\" : \"bar\"\n}")))))))
 
 (deftest test-json-response-cps
   (testing "map body"
