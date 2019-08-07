@@ -88,6 +88,6 @@ option. Instead, use the standard Ring `wrap-keyword-params` function:
 
 ## License
 
-Copyright © 2015 James Reeves
+Copyright © 2019 James Reeves
 
 Distributed under the MIT License, the same as Ring.
