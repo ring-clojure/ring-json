@@ -6,7 +6,8 @@
             [ring.core.protocols :as ring-protocols]
             [ring.util.io :as ring-io]
             [ring.util.response :refer [content-type]]
-            [ring.util.request :refer [character-encoding]]))
+            [ring.util.request :refer [character-encoding]])
+  (:import [java.io InputStream]))
 
 (defn- json-request? [request]
   (if-let [type (get-in request [:headers "content-type"])]
@@ -14,13 +15,13 @@
 
 (defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
   (if (json-request? request)
-    (if-let [body (:body request)]
-      (let [encoding (or (character-encoding request)
-                          "UTF-8")
-            body-string (slurp body :encoding encoding)]
+    (if-let [^InputStream body (:body request)]
+      (let [^String encoding (or (character-encoding request)
+                                 "UTF-8")
+            body-reader (java.io.InputStreamReader. body encoding)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-string body-string keywords?)]
+            [true (json/parse-stream body-reader keywords?)]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
