@@ -77,9 +77,9 @@
   "Parse the body of JSON requests into a map of parameters, which are added
   to the request map on the :json-params and :params keys. Returns nil if the
   JSON is malformed. See: wrap-json-params."
-  [request {:keys [bigdecimals?]}]
-  (if-let [[valid? json] (read-json request {:bigdecimals? bigdecimals?})]
-    (if valid? (assoc-json-params request json))
+  [request options]
+  (if-let [[valid? json] (read-json request options)]
+    (if valid? (assoc-json-params request json options))
     request))
 
 (defn wrap-json-params
