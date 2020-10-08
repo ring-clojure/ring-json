@@ -34,8 +34,8 @@
 (defn json-body-request
   "Parse a JSON request body and assoc it back into the :body key. Returns nil
   if the JSON is malformed. See: wrap-json-body."
-  [request {:keys [keywords? bigdecimals?]}]
-  (if-let [[valid? json] (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+  [request options]
+  (if-let [[valid? json] (read-json request options)]
     (if valid? (assoc request :body json))
     request))
 
