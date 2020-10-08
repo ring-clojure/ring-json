@@ -46,6 +46,7 @@
 
   Accepts the following options:
 
+  :key-fn             - fn that will be applied to each key
   :keywords?          - true if the keys of maps should be turned into keywords
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
   :malformed-response - a response map to return when the JSON is malformed"
