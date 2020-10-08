@@ -134,6 +134,8 @@
 
   Accepts the following options:
 
+  :date-format       - an optional date format string that Date objects will be encoded with
+  :key-fn            - fn that will be applied to each key
   :pretty            - true if the JSON should be pretty-printed
   :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u
   :stream?           - true to create JSON body as stream rather than string"
