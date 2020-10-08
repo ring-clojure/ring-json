@@ -13,7 +13,7 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
+(defn- read-json [request & [{:keys [keywords? bigdecimals? key-fn]}]]
   (if (json-request? request)
     (if-let [^InputStream body (:body request)]
       (let [^String encoding (or (character-encoding request)
@@ -21,7 +21,7 @@
             body-reader (java.io.InputStreamReader. body encoding)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-stream body-reader keywords?)]
+            [true (json/parse-stream body-reader (or key-fn keywords?))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
