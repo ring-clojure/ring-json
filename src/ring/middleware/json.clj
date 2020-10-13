@@ -36,7 +36,7 @@
   if the JSON is malformed. See: wrap-json-body."
   [request options]
   (if-let [[valid? json] (read-json request options)]
-    (if valid? (assoc request :body json))
+    (when valid? (assoc request :body json))
     request))
 
 (defn wrap-json-body
@@ -79,7 +79,7 @@
   JSON is malformed. See: wrap-json-params."
   [request options]
   (if-let [[valid? json] (read-json request options)]
-    (if valid? (assoc-json-params request json options))
+    (when valid? (assoc-json-params request json options))
     request))
 
 (defn wrap-json-params
