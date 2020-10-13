@@ -64,14 +64,12 @@
        (handler request respond raise)
        (respond malformed-response)))))
 
-(defn- map-kv [f coll]
-  (reduce-kv (fn [m k v] (assoc m (f k) v)) (empty coll) coll))
-
-(defn- assoc-json-params [request json {:keys [key-fn]}]
-  (cond-> request
-    (map? json)  (-> (assoc :json-params json)
-                     (update-in [:params] merge json))
-    (fn? key-fn) (update :params (partial map-kv key-fn))))
+(defn- assoc-json-params [request json]
+  (if (map? json)
+    (-> request
+        (assoc :json-params json)
+        (update-in [:params] merge json))
+    request))
 
 (defn json-params-request
   "Parse the body of JSON requests into a map of parameters, which are added
