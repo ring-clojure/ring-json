@@ -77,7 +77,7 @@
   JSON is malformed. See: wrap-json-params."
   [request options]
   (if-let [[valid? json] (read-json request options)]
-    (when valid? (assoc-json-params request json options))
+    (when valid? (assoc-json-params request json))
     request))
 
 (defn wrap-json-params
