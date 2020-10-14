@@ -17,7 +17,7 @@
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
             response (handler request)]
         (is (= {"foo" "bar"} (:body response)))))
-    
+
     (testing "custom json body"
       (let [request  {:headers {"content-type" "application/vnd.foobar+json; charset=UTF-8"}
                       :body (string-input-stream "{\"foo\": \"bar\"}")}
@@ -44,6 +44,13 @@
                       :body (string-input-stream (String. (.getBytes "{\"foo\": \"你好\"}")) "GBK")}
             response (handler request)]
         (is (= {"foo" "你好"} (:body response))))))
+
+  (let [handler (wrap-json-body identity {:key-fn (fn [k] (.toUpperCase (name k)))})]
+    (testing "key-fn"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")}
+            response (handler request)]
+        (is (= {"FOO" "bar"} (:body response))))))
 
   (let [handler (wrap-json-body identity {:keywords? true})]
     (testing "keyword keys"
@@ -146,7 +153,7 @@
           (is (= (get-in @response [:body :bigdecimals]) true)))))))
 
 (deftest test-json-params
-  (let [handler  (wrap-json-params identity)]
+  (let [handler (wrap-json-params identity)]
     (testing "xml body"
       (let [request  {:headers {"content-type" "application/xml"}
                       :body (string-input-stream "<xml></xml>")
@@ -163,6 +170,15 @@
             response (handler request)]
         (is (= {"id" 3, "foo" "bar"} (:params response)))
         (is (= {"foo" "bar"} (:json-params response)))))
+
+    (testing "key-fn"
+      (let [request  {:headers {"content-type" "application/json; charset=UTF-8"}
+                      :body (string-input-stream "{\"foo\": \"bar\"}")
+                      :params {"id" 3}}
+            handler  (wrap-json-params identity {:key-fn (fn [k] (.toUpperCase (name k)))})
+            response (handler request)]
+        (is (= {"id" 3, "FOO" "bar"} (:params response)))
+        (is (= {"FOO" "bar"} (:json-params response)))))
 
     (testing "json body with bigdecimals"
       (let [handler (wrap-json-params identity {:bigdecimals? true})
@@ -312,6 +328,13 @@
           response ((wrap-json-response handler) {})]
       (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
       (is (= (:body response) "[\"foo\",\"bar\"]"))))
+
+  (testing "key-fn"
+    (let [handler  (constantly {:status 200 :headers {} :body {:foo "bar" :baz "quz"}})
+          response ((wrap-json-response handler {:key-fn (fn [k] (.toUpperCase (name k)))}) {})]
+      (is (= (get-in response [:headers "Content-Type"]) "application/json; charset=utf-8"))
+      (is (or (= "{\"FOO\":\"bar\",\"BAZ\":\"quz\"}" (:body response))
+              (= "{\"BAZ\":\"quz\",\"FOO\":\"bar\"}" (:body response))))))
 
   (testing "list body"
     (let [handler  (constantly {:status 200 :headers {} :body '(:foo :bar)})
