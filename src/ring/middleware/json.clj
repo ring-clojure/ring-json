@@ -13,7 +13,7 @@
   (if-let [type (get-in request [:headers "content-type"])]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
-(defn- read-json [request & [{:keys [keywords? bigdecimals?]}]]
+(defn- read-json [request & [{:keys [keywords? bigdecimals? key-fn]}]]
   (if (json-request? request)
     (if-let [^InputStream body (:body request)]
       (let [^String encoding (or (character-encoding request)
@@ -21,7 +21,7 @@
             body-reader (java.io.InputStreamReader. body encoding)]
         (binding [parse/*use-bigdecimals?* bigdecimals?]
           (try
-            [true (json/parse-stream body-reader keywords?)]
+            [true (json/parse-stream body-reader (or key-fn keywords?))]
             (catch com.fasterxml.jackson.core.JsonParseException ex
               [false nil])))))))
 
@@ -34,8 +34,8 @@
 (defn json-body-request
   "Parse a JSON request body and assoc it back into the :body key. Returns nil
   if the JSON is malformed. See: wrap-json-body."
-  [request {:keys [keywords? bigdecimals?]}]
-  (if-let [[valid? json] (read-json request {:keywords? keywords? :bigdecimals? bigdecimals?})]
+  [request options]
+  (if-let [[valid? json] (read-json request options)]
     (if valid? (assoc request :body json))
     request))
 
@@ -46,6 +46,7 @@
 
   Accepts the following options:
 
+  :key-fn             - function that will be applied to each key
   :keywords?          - true if the keys of maps should be turned into keywords
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
   :malformed-response - a response map to return when the JSON is malformed"
@@ -74,8 +75,8 @@
   "Parse the body of JSON requests into a map of parameters, which are added
   to the request map on the :json-params and :params keys. Returns nil if the
   JSON is malformed. See: wrap-json-params."
-  [request {:keys [bigdecimals?]}]
-  (if-let [[valid? json] (read-json request {:bigdecimals? bigdecimals?})]
+  [request options]
+  (if-let [[valid? json] (read-json request options)]
     (if valid? (assoc-json-params request json))
     request))
 
@@ -85,6 +86,7 @@
 
   Accepts the following options:
 
+  :key-fn             - function that will be applied to each key
   :bigdecimals?       - true if BigDecimals should be used instead of Doubles
   :malformed-response - a response map to return when the JSON is malformed
 
@@ -130,6 +132,7 @@
 
   Accepts the following options:
 
+  :key-fn            - function that will be applied to each key
   :pretty            - true if the JSON should be pretty-printed
   :escape-non-ascii  - true if non-ASCII characters should be escaped with \\u
   :stream?           - true to create JSON body as stream rather than string"
