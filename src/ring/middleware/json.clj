@@ -10,7 +10,8 @@
   (:import [java.io InputStream]))
 
 (defn- json-request? [request]
-  (if-let [type (get-in request [:headers "content-type"])]
+  (if-let [type (or (get-in request [:headers "content-type"])
+                    (get-in request [:headers :content-type]))]
     (not (empty? (re-find #"^application/(.+\+)?json" type)))))
 
 (defn- read-json [request & [{:keys [keywords? bigdecimals? key-fn]}]]
